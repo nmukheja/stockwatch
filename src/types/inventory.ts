@@ -40,3 +40,10 @@ export type DashboardPayload = {
   dataMode: "mongo" | "memory";
   generatedAt: string;
 };
+
+export type ScenarioModel = {
+  affectedSkus: string[];
+  stockMultiplier: number;
+  velocityMultiplier: number;
+  summary: string;
+};

@@ -8,8 +8,8 @@ The business value is simple: ops teams can see stockout risk before customers f
 
 1. Register an ops account or sign in with an existing account.
 2. Review the live SKU monitor and countdown clocks.
-3. Click **Trigger demand spike** to simulate a fast checkout surge.
-4. Watch the dashboard highlight critical countdowns and generate draft supplier actions.
+3. Enter a scenario such as `Diwali sale — electronics surge, 3× velocity, 60% stock drop` and click **Run Scenario**.
+4. Watch Codex choose affected SKUs, model stock and velocity changes, then highlight critical countdowns and draft supplier actions.
 5. Ask: `which products will stock out before Friday?`
 6. Look for the green `Codex live` badge above the answer. If Codex is unavailable, the badge says `Local engine`.
 
@@ -54,7 +54,7 @@ npm test
 
 ## Video outline
 
-1. Demo the app: register, trigger a demand spike, show stockout countdowns, restock drafts, and ask which products will stock out before Friday.
+1. Demo the app: register, run a demand scenario, show stockout countdowns, restock drafts, and ask which products will stock out before Friday.
 2. Show the `Codex live` badge after the natural-language answer to prove the app used the live Codex CLI path.
 3. Explain the build: MongoDB user/inventory persistence, JWT auth, forecast tests, and the `src/lib/codex-agent.ts` bridge.
 4. Open `tryCodex` and show how `CODEX_SDK_ENABLED=true` makes the app call `codex exec` programmatically.

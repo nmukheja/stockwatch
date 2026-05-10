@@ -242,6 +242,41 @@ a {
   gap: 10px;
 }
 
+.scenario-form {
+  display: grid;
+  grid-template-columns: minmax(280px, 560px) auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.scenario-form input {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text);
+  outline: none;
+  padding: 0 12px;
+}
+
+.scenario-summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 auto 18px;
+  max-width: 1440px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-strong);
+  padding: 12px 14px;
+}
+
+.scenario-summary p {
+  margin: 0;
+  color: #dceaff;
+}
+
 .dashboard-grid {
   display: grid;
   grid-template-columns: 1.2fr 0.8fr;
@@ -457,5 +492,16 @@ a {
 
   .query form {
     grid-template-columns: 1fr;
+  }
+
+  .scenario-form,
+  .scenario-summary {
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+
+  .scenario-summary {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }

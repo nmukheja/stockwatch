@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, BellRing, Bot, Clock3, Database, RefreshCw, Send, Sparkles, Zap } from "lucide-react";
+import { AlertTriangle, BellRing, Bot, Clock3, Database, RefreshCw, Send, Sparkles } from "lucide-react";
 import type { DashboardPayload, ProductIntelligence } from "@/types/inventory";
 
 type Props = {
@@ -32,6 +32,11 @@ export default function Dashboard({ initialData, userName }: Props) {
   const [answerSource, setAnswerSource] = useState<"codex" | "fallback" | "">("");
   const [queryError, setQueryError] = useState("");
   const [isAsking, setIsAsking] = useState(false);
+  const [scenario, setScenario] = useState("");
+  const [scenarioSummary, setScenarioSummary] = useState("");
+  const [scenarioSource, setScenarioSource] = useState<"codex" | "fallback" | "">("");
+  const [scenarioError, setScenarioError] = useState("");
+  const [isModellingScenario, setIsModellingScenario] = useState(false);
   const [rewriting, setRewriting] = useState(false);
 
   const critical = useMemo(() => data.products.filter((product) => product.status !== "healthy").slice(0, 3), [data]);
@@ -49,15 +54,39 @@ export default function Dashboard({ initialData, userName }: Props) {
     setAnswer("");
     setAnswerSource("");
     setQueryError("");
+    setScenarioSummary("");
+    setScenarioSource("");
+    setScenarioError("");
     setRewriting(false);
     setData(await response.json());
   }
 
-  async function shock() {
+  async function runScenario(event: React.FormEvent) {
+    event.preventDefault();
     setRewriting(true);
-    const response = await fetch("/api/inventory/shock", { method: "POST" });
-    setData(await response.json());
-    setTimeout(() => setRewriting(false), 5000);
+    setIsModellingScenario(true);
+    setScenarioError("");
+    setScenarioSummary("");
+    setScenarioSource("");
+
+    try {
+      const response = await fetch("/api/inventory/scenario", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ scenario, products: data.products })
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || "Scenario modelling failed.");
+      setData(payload.dashboard);
+      setScenarioSummary(payload.summary);
+      setScenarioSource(payload.source);
+    } catch (error) {
+      setScenarioError(error instanceof Error ? error.message : "Scenario modelling failed.");
+      setRewriting(false);
+    } finally {
+      setIsModellingScenario(false);
+      setTimeout(() => setRewriting(false), 5000);
+    }
   }
 
   async function askCodex(event: React.FormEvent) {
@@ -116,11 +145,30 @@ export default function Dashboard({ initialData, userName }: Props) {
           <button className="ghost-btn" onClick={logout}>
             Sign out
           </button>
-          <button className="danger-btn" onClick={shock}>
-            <Zap size={16} /> Trigger demand spike
-          </button>
+          <form className="scenario-form" onSubmit={runScenario}>
+            <input
+              value={scenario}
+              onChange={(event) => setScenario(event.target.value)}
+              placeholder="Describe a demand scenario... e.g. Diwali sale — electronics surge, 3× velocity, 60% stock drop"
+              required
+            />
+            <button className="danger-btn" type="submit" disabled={isModellingScenario}>
+              <Sparkles size={16} /> {isModellingScenario ? "Modelling" : "Run Scenario"}
+            </button>
+          </form>
         </div>
       </nav>
+
+      {(isModellingScenario || scenarioSummary || scenarioError) && (
+        <section className={`scenario-summary ${rewriting ? "rewrite" : ""}`}>
+          {scenarioSource ? (
+            <span className={`status-pill source-badge ${scenarioSource === "codex" ? "source-live" : "source-local"}`}>
+              {scenarioSource === "codex" ? "Codex live" : "Local engine"}
+            </span>
+          ) : null}
+          <p>{isModellingScenario ? "Codex is modelling this scenario..." : scenarioError || scenarioSummary}</p>
+        </section>
+      )}
 
       <section className="hero">
         <div>
@@ -150,7 +198,7 @@ export default function Dashboard({ initialData, userName }: Props) {
           </div>
           <p className="reasoning">
             {rewriting
-              ? "Codex detected a stock collapse and rewrote the dashboard around countdowns, supplier actions, and urgency explanations."
+              ? "Stockwatch remodelled the dashboard around the scenario, countdowns, supplier actions, and urgency explanations."
               : data.products[0]?.reasoning}
           </p>
         </aside>
@@ -266,7 +314,7 @@ export default function Dashboard({ initialData, userName }: Props) {
             <article className="draft-card">
               <strong>No drafts yet</strong>
               <p className="reasoning">
-                Trigger a demand spike to make Codex draft restock orders and Slack-style alert text.
+                Run a demand scenario to make Codex draft restock orders and Slack-style alert text.
               </p>
             </article>
           )}

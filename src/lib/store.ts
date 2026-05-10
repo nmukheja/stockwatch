@@ -3,7 +3,7 @@ import { draftRestock, enrichProduct } from "@/lib/forecast";
 import { seedProducts } from "@/lib/seed";
 import { ProductModel } from "@/models/Product";
 import { RestockDraftModel } from "@/models/RestockDraft";
-import type { DashboardPayload, Product, RestockDraft } from "@/types/inventory";
+import type { DashboardPayload, Product, RestockDraft, ScenarioModel } from "@/types/inventory";
 
 let memoryProducts = [...seedProducts];
 let memoryDrafts: RestockDraft[] = [];
@@ -137,6 +137,43 @@ export async function simulateDemandShock() {
         stock: { $max: [4, { $floor: { $multiply: ["$stock", 0.46] } }] },
         salesVelocityPerHour: { $round: [{ $multiply: ["$salesVelocityPerHour", 1.55] }, 1] },
         lastFourDayDropPct: { $min: [96, { $add: ["$lastFourDayDropPct", 9] }] }
+      }
+    }
+  ]);
+
+  return generateDrafts();
+}
+
+export async function applyScenarioModel(model: ScenarioModel) {
+  const affectedSkus = model.affectedSkus.filter(Boolean);
+  if (!affectedSkus.length) return generateDrafts();
+
+  const stockMultiplier = Math.max(0.05, Math.min(2, model.stockMultiplier));
+  const velocityMultiplier = Math.max(0.1, Math.min(10, model.velocityMultiplier));
+  const dropIncrease = Math.max(0, Math.round((1 - Math.min(stockMultiplier, 1)) * 100));
+  const mongo = await connectMongo();
+
+  if (!mongo) {
+    memoryProducts = memoryProducts.map((product) => {
+      if (!affectedSkus.includes(product.sku)) return product;
+
+      return {
+        ...product,
+        stock: Math.max(0, Math.floor(product.stock * stockMultiplier)),
+        salesVelocityPerHour: Number((product.salesVelocityPerHour * velocityMultiplier).toFixed(1)),
+        lastFourDayDropPct: Math.min(96, product.lastFourDayDropPct + dropIncrease),
+        updatedAt: new Date().toISOString()
+      };
+    });
+    return generateDrafts();
+  }
+
+  await ProductModel.updateMany({ sku: { $in: affectedSkus } }, [
+    {
+      $set: {
+        stock: { $max: [0, { $floor: { $multiply: ["$stock", stockMultiplier] } }] },
+        salesVelocityPerHour: { $round: [{ $multiply: ["$salesVelocityPerHour", velocityMultiplier] }, 1] },
+        lastFourDayDropPct: { $min: [96, { $add: ["$lastFourDayDropPct", dropIncrease] }] }
       }
     }
   ]);

@@ -15,7 +15,7 @@ function shouldRunCodex() {
   return true;
 }
 
-async function tryCodex(prompt: string) {
+export async function tryCodex(prompt: string) {
   if (!shouldRunCodex()) return null;
 
   const outputPath = join(tmpdir(), `stockwatch-codex-${randomUUID()}.txt`);

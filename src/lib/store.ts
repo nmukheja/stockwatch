@@ -88,7 +88,7 @@ export async function simulateDemandShock() {
   const mongo = await connectMongo();
   if (!mongo) {
     memoryProducts = memoryProducts.map((product) => {
-      if (["APN-2049", "TRV-CBN", "ESP-PRO"].includes(product.sku)) {
+      if (["ATTA-10K", "HTR-BJ2K", "KURT-WF"].includes(product.sku)) {
         return {
           ...product,
           stock: Math.max(4, Math.floor(product.stock * 0.46)),
@@ -103,7 +103,7 @@ export async function simulateDemandShock() {
   }
 
   await ProductModel.updateMany(
-    { sku: { $in: ["APN-2049", "TRV-CBN", "ESP-PRO"] } },
+    { sku: { $in: ["ATTA-10K", "HTR-BJ2K", "KURT-WF"] } },
     [
       {
         $set: {

@@ -1,19 +1,26 @@
 import { answerInventoryQuestion, draftRestock } from "@/lib/forecast";
 import type { ProductIntelligence } from "@/types/inventory";
 import { execFile } from "node:child_process";
+import { randomUUID } from "node:crypto";
+import { readFile, unlink } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { promisify } from "node:util";
 
 const execFileAsync = promisify(execFile);
 
 async function tryCodex(prompt: string) {
-  if (process.env.CODEX_SDK_ENABLED !== "true") return null;
+  if (process.env.CODEX_DISABLED === "true") return null;
 
   try {
-    const { stdout } = await execFileAsync("codex", ["exec", "--ask-for-approval", "never", prompt], {
-      timeout: 30000,
+    const outputPath = join(tmpdir(), `stockwatch-codex-${randomUUID()}.txt`);
+    const { stdout } = await execFileAsync("codex", ["exec", "--sandbox", "read-only", "--output-last-message", outputPath, prompt], {
+      timeout: 45000,
       maxBuffer: 1024 * 1024
     });
-    return stdout.trim() || null;
+    const cleanAnswer = await readFile(outputPath, "utf8").catch(() => "");
+    await unlink(outputPath).catch(() => undefined);
+    return cleanAnswer.trim() || stdout.trim() || null;
   } catch {
     return null;
   }
@@ -38,10 +45,23 @@ export async function codexDraftOrders(products: ProductIntelligence[]) {
 
 export async function codexAnswerInventoryQuestion(question: string, products: ProductIntelligence[]) {
   const prompt = [
+    "You are Codex running inside Stockwatch, an eCommerce inventory ops workflow.",
     "Answer this ops inventory question from MongoDB-like product JSON in one sentence.",
+    "Do not modify files. Do not include markdown. Return only the answer sentence.",
     `Question: ${question}`,
     JSON.stringify(products)
   ].join("\n");
 
-  return (await tryCodex(prompt)) || answerInventoryQuestion(question, products);
+  const answer = await tryCodex(prompt);
+  if (answer) {
+    return {
+      answer,
+      source: "codex" as const
+    };
+  }
+
+  return {
+    answer: answerInventoryQuestion(question, products),
+    source: "fallback" as const
+  };
 }

@@ -370,6 +370,10 @@ a {
   padding-left: 12px;
 }
 
+.answer p {
+  margin: 10px 0 0;
+}
+
 .drafts {
   margin-top: 18px;
   padding-bottom: 28px;

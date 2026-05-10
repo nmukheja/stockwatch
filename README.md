@@ -15,7 +15,7 @@ Smart inventory alerting for eCommerce ops teams. Stockwatch gives a live dashbo
 - Next.js App Router and React
 - Register/sign-in auth with MongoDB user persistence, password hashing, and signed JWT session cookies
 - MongoDB Atlas persistence through Mongoose
-- Programmatic `codex exec` bridge with deterministic local fallback
+- Programmatic `codex exec` bridge for live natural-language inventory answers
 - Vitest unit tests for stockout forecasting and natural-language query behavior
 
 ## Environment
@@ -31,7 +31,7 @@ Open http://localhost:3000.
 
 ## Codex integration
 
-`src/lib/codex-agent.ts` is the programmatic Codex boundary. Set `CODEX_SDK_ENABLED=true` on a machine with the Codex CLI installed and authenticated to let the app call `codex exec` for restock reasoning and inventory answers. Without that flag, Stockwatch uses the same deterministic forecasting engine used by tests, which keeps the demo reliable.
+`src/lib/codex-agent.ts` is the programmatic Codex boundary. By default the app calls `codex exec` for natural-language inventory answers, so the demo exercises Codex inside the workflow. Set `CODEX_DISABLED=true` only when running in an environment without the Codex CLI; the UI labels fallback answers clearly.
 
 ## Tests
 

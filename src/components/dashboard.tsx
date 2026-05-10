@@ -29,6 +29,7 @@ export default function Dashboard({ initialData, userName }: Props) {
   const [tick, setTick] = useState(0);
   const [question, setQuestion] = useState("which products will stock out before Friday?");
   const [answer, setAnswer] = useState("");
+  const [answerSource, setAnswerSource] = useState<"codex" | "fallback" | "">("");
   const [rewriting, setRewriting] = useState(false);
   const [pending, startTransition] = useTransition();
 
@@ -45,6 +46,7 @@ export default function Dashboard({ initialData, userName }: Props) {
   async function seed() {
     const response = await fetch("/api/inventory/seed", { method: "POST" });
     setAnswer("");
+    setAnswerSource("");
     setRewriting(false);
     setData(await response.json());
   }
@@ -66,6 +68,7 @@ export default function Dashboard({ initialData, userName }: Props) {
       });
       const payload = await response.json();
       setAnswer(payload.answer);
+      setAnswerSource(payload.source);
     });
   }
 
@@ -207,7 +210,12 @@ export default function Dashboard({ initialData, userName }: Props) {
             <Send size={16} /> {pending ? "Asking" : "Ask Codex"}
           </button>
         </form>
-        {answer ? <div className="answer">{answer}</div> : null}
+        {answer ? (
+          <div className="answer">
+            <span className="status-pill">{answerSource === "codex" ? "Live Codex exec" : "Forecast engine fallback"}</span>
+            <p>{answer}</p>
+          </div>
+        ) : null}
       </section>
 
       <section className="drafts">

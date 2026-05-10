@@ -12,6 +12,5 @@ export async function POST(request: Request) {
   if (!getApiSession()) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const body = QuerySchema.parse(await request.json());
   const dashboard = await getDashboard();
-  const answer = await codexAnswerInventoryQuestion(body.question, dashboard.products);
-  return NextResponse.json({ answer });
+  return NextResponse.json(await codexAnswerInventoryQuestion(body.question, dashboard.products));
 }

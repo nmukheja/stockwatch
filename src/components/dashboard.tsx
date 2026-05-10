@@ -242,8 +242,8 @@ export default function Dashboard({ initialData, userName }: Props) {
         {queryError ? <div className="answer error-answer">{queryError}</div> : null}
         {answer ? (
           <div className="answer">
-            <span className="status-pill">
-              {answerSource === "codex" ? "Live Codex exec" : "Forecast engine fallback"}
+            <span className={`status-pill source-badge ${answerSource === "codex" ? "source-live" : "source-local"}`}>
+              {answerSource === "codex" ? "Codex live" : "Local engine"}
             </span>
             <p>{answer}</p>
           </div>

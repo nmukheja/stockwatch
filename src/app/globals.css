@@ -280,6 +280,22 @@ a {
   padding: 6px 10px;
 }
 
+.source-badge {
+  font-weight: 800;
+}
+
+.source-live {
+  border-color: rgba(79, 243, 165, 0.46);
+  background: rgba(79, 243, 165, 0.12);
+  color: var(--mint);
+}
+
+.source-local {
+  border-color: rgba(255, 202, 99, 0.46);
+  background: rgba(255, 202, 99, 0.12);
+  color: var(--amber);
+}
+
 .sku-table {
   display: grid;
   gap: 9px;

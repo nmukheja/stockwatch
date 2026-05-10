@@ -9,8 +9,14 @@ import { promisify } from "node:util";
 
 const execFileAsync = promisify(execFile);
 
+function shouldRunCodex() {
+  if (process.env.CODEX_DISABLED === "true") return false;
+  if (process.env.CODEX_SDK_ENABLED === "false") return false;
+  return true;
+}
+
 async function tryCodex(prompt: string) {
-  if (process.env.CODEX_DISABLED === "true") return null;
+  if (!shouldRunCodex()) return null;
 
   const outputPath = join(tmpdir(), `stockwatch-codex-${randomUUID()}.txt`);
 

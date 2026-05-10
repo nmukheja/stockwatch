@@ -1,12 +1,19 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, BellRing, Bot, Clock3, Database, RefreshCw, Send, Sparkles } from "lucide-react";
-import type { DashboardPayload, ProductIntelligence } from "@/types/inventory";
+import { AlertTriangle, BellRing, Bot, Clock3, Database, MessageSquare, RefreshCw, Send, Sparkles } from "lucide-react";
+import type { DashboardPayload, ProductIntelligence, RestockDraft } from "@/types/inventory";
 
 type Props = {
   initialData: DashboardPayload;
   userName: string;
+};
+
+type SlackAlertState = {
+  message?: string;
+  source?: "codex" | "fallback";
+  error?: string;
+  loading?: boolean;
 };
 
 function formatCountdown(hours: number) {
@@ -37,6 +44,7 @@ export default function Dashboard({ initialData, userName }: Props) {
   const [scenarioSource, setScenarioSource] = useState<"codex" | "fallback" | "">("");
   const [scenarioError, setScenarioError] = useState("");
   const [isModellingScenario, setIsModellingScenario] = useState(false);
+  const [slackAlerts, setSlackAlerts] = useState<Record<string, SlackAlertState>>({});
   const [rewriting, setRewriting] = useState(false);
 
   const critical = useMemo(() => data.products.filter((product) => product.status !== "healthy").slice(0, 3), [data]);
@@ -57,6 +65,7 @@ export default function Dashboard({ initialData, userName }: Props) {
     setScenarioSummary("");
     setScenarioSource("");
     setScenarioError("");
+    setSlackAlerts({});
     setRewriting(false);
     setData(await response.json());
   }
@@ -80,6 +89,7 @@ export default function Dashboard({ initialData, userName }: Props) {
       setData(payload.dashboard);
       setScenarioSummary(payload.summary);
       setScenarioSource(payload.source);
+      setSlackAlerts({});
     } catch (error) {
       setScenarioError(error instanceof Error ? error.message : "Scenario modelling failed.");
       setRewriting(false);
@@ -118,6 +128,36 @@ export default function Dashboard({ initialData, userName }: Props) {
   async function logout() {
     await fetch("/api/logout", { method: "POST" });
     window.location.href = "/login";
+  }
+
+  async function draftSlackAlert(draft: RestockDraft) {
+    const product = data.products.find((item) => item.sku === draft.sku);
+    if (!product) return;
+
+    setSlackAlerts((current) => ({
+      ...current,
+      [draft.id]: { loading: true }
+    }));
+
+    try {
+      const response = await fetch("/api/inventory/slack", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ product, draft })
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || "Slack draft failed.");
+
+      setSlackAlerts((current) => ({
+        ...current,
+        [draft.id]: { message: payload.message, source: payload.source }
+      }));
+    } catch (error) {
+      setSlackAlerts((current) => ({
+        ...current,
+        [draft.id]: { error: error instanceof Error ? error.message : "Slack draft failed." }
+      }));
+    }
   }
 
   useEffect(() => {
@@ -308,6 +348,31 @@ export default function Dashboard({ initialData, userName }: Props) {
                 <strong>{draft.productName}</strong>
                 <div>{draft.message}</div>
                 <p className="reasoning">{draft.reasoning}</p>
+                <button
+                  className="ghost-btn"
+                  onClick={() => draftSlackAlert(draft)}
+                  disabled={slackAlerts[draft.id]?.loading}
+                >
+                  <MessageSquare size={16} /> {slackAlerts[draft.id]?.loading ? "Drafting" : "Draft Slack alert"}
+                </button>
+                {slackAlerts[draft.id]?.error ? (
+                  <div className="slack-error">{slackAlerts[draft.id]?.error}</div>
+                ) : null}
+                {slackAlerts[draft.id]?.message ? (
+                  <div className="slack-bubble">
+                    <div className="slack-meta">
+                      <span className="slack-app">Stockwatch Bot</span>
+                      <span
+                        className={`status-pill source-badge ${
+                          slackAlerts[draft.id]?.source === "codex" ? "source-live" : "source-local"
+                        }`}
+                      >
+                        {slackAlerts[draft.id]?.source === "codex" ? "Codex live" : "Local engine"}
+                      </span>
+                    </div>
+                    <pre>{slackAlerts[draft.id]?.message}</pre>
+                  </div>
+                ) : null}
               </article>
             ))
           ) : (

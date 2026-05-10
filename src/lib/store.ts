@@ -8,7 +8,36 @@ import type { DashboardPayload, Product, RestockDraft } from "@/types/inventory"
 let memoryProducts = [...seedProducts];
 let memoryDrafts: RestockDraft[] = [];
 
-function normalizeProduct(document: any): Product {
+type ProductDocument = {
+  _id?: unknown;
+  id?: unknown;
+  sku: string;
+  name: string;
+  category: string;
+  stock: number;
+  threshold: number;
+  reorderQuantity: number;
+  unitCost: number;
+  salesVelocityPerHour: number;
+  lastFourDayDropPct: number;
+  supplier: string;
+  updatedAt?: Date | string;
+};
+
+type RestockDraftDocument = {
+  _id?: unknown;
+  id?: unknown;
+  sku: string;
+  productName: string;
+  quantity: number;
+  supplier: string;
+  urgency: number;
+  message: string;
+  reasoning: string;
+  createdAt?: Date | string;
+};
+
+function normalizeProduct(document: ProductDocument): Product {
   return {
     id: String(document._id || document.id),
     sku: document.sku,
@@ -25,7 +54,7 @@ function normalizeProduct(document: any): Product {
   };
 }
 
-function normalizeDraft(document: any): RestockDraft {
+function normalizeDraft(document: RestockDraftDocument): RestockDraft {
   return {
     id: String(document._id || document.id),
     sku: document.sku,
@@ -60,7 +89,7 @@ export async function getProducts() {
   const count = await ProductModel.countDocuments();
   if (count === 0) await ProductModel.insertMany(seedProducts);
 
-  const docs = await ProductModel.find({}).sort({ sku: 1 }).lean();
+  const docs = await ProductModel.find({}).sort({ sku: 1 }).lean<ProductDocument[]>();
   return docs.map(normalizeProduct);
 }
 
@@ -68,7 +97,7 @@ export async function getDrafts() {
   const mongo = await connectMongo();
   if (!mongo) return memoryDrafts;
 
-  const docs = await RestockDraftModel.find({}).sort({ createdAt: -1 }).limit(9).lean();
+  const docs = await RestockDraftModel.find({}).sort({ createdAt: -1 }).limit(9).lean<RestockDraftDocument[]>();
   return docs.map(normalizeDraft);
 }
 
@@ -102,18 +131,15 @@ export async function simulateDemandShock() {
     return generateDrafts();
   }
 
-  await ProductModel.updateMany(
-    { sku: { $in: ["ATTA-10K", "HTR-BJ2K", "KURT-WF"] } },
-    [
-      {
-        $set: {
-          stock: { $max: [4, { $floor: { $multiply: ["$stock", 0.46] } }] },
-          salesVelocityPerHour: { $round: [{ $multiply: ["$salesVelocityPerHour", 1.55] }, 1] },
-          lastFourDayDropPct: { $min: [96, { $add: ["$lastFourDayDropPct", 9] }] }
-        }
+  await ProductModel.updateMany({ sku: { $in: ["ATTA-10K", "HTR-BJ2K", "KURT-WF"] } }, [
+    {
+      $set: {
+        stock: { $max: [4, { $floor: { $multiply: ["$stock", 0.46] } }] },
+        salesVelocityPerHour: { $round: [{ $multiply: ["$salesVelocityPerHour", 1.55] }, 1] },
+        lastFourDayDropPct: { $min: [96, { $add: ["$lastFourDayDropPct", 9] }] }
       }
-    ]
-  );
+    }
+  ]);
 
   return generateDrafts();
 }

@@ -15,7 +15,8 @@ export default async function LoginPage() {
         </div>
         <h1 style={{ marginTop: 24 }}>Ops command center</h1>
         <p>
-          Register your ops account or sign in to watch Codex forecast stockouts, explain urgency, and draft supplier actions.
+          Register your ops account or sign in to watch Codex forecast stockouts, explain urgency, and draft supplier
+          actions.
         </p>
         <LoginForm />
       </section>

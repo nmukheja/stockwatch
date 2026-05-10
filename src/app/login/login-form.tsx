@@ -49,7 +49,14 @@ export default function LoginForm() {
       </div>
       <div className="field">
         <label htmlFor="password">Password</label>
-        <input id="password" name="password" type="password" autoComplete={mode === "register" ? "new-password" : "current-password"} minLength={mode === "register" ? 8 : 1} required />
+        <input
+          id="password"
+          name="password"
+          type="password"
+          autoComplete={mode === "register" ? "new-password" : "current-password"}
+          minLength={mode === "register" ? 8 : 1}
+          required
+        />
       </div>
       {error ? <p className="urgent">{error}</p> : null}
       <button className="primary-btn" style={{ width: "100%", marginTop: 18 }} type="submit">

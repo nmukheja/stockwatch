@@ -13,5 +13,4 @@ const RestockDraftSchema = new Schema(
   { timestamps: true }
 );
 
-export const RestockDraftModel =
-  mongoose.models.RestockDraft || mongoose.model("RestockDraft", RestockDraftSchema);
+export const RestockDraftModel = mongoose.models.RestockDraft || mongoose.model("RestockDraft", RestockDraftSchema);

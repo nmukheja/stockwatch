@@ -23,7 +23,9 @@ export function calculateUrgency(product: Product) {
 
 export function explainUrgency(product: Product, urgency = calculateUrgency(product)) {
   const hours = estimateHoursUntilZero(product.stock, product.salesVelocityPerHour);
-  const hoursText = Number.isFinite(hours) ? `${Math.max(0, Math.round(hours))} hours until stockout` : "no current sell-through";
+  const hoursText = Number.isFinite(hours)
+    ? `${Math.max(0, Math.round(hours))} hours until stockout`
+    : "no current sell-through";
   return `I flagged ${product.sku} as urgency ${urgency} because stock dropped ${product.lastFourDayDropPct}% in 4 days, velocity is ${product.salesVelocityPerHour.toFixed(1)} units/hour, and there are ${hoursText}.`;
 }
 

@@ -7,6 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "format": "prettier --check .",
+    "format:write": "prettier --write .",
     "test": "vitest run",
     "test:watch": "vitest"
   },
@@ -26,6 +28,7 @@
     "@types/react-dom": "^18.3.5",
     "eslint": "^8.57.1",
     "eslint-config-next": "^14.2.20",
+    "prettier": "^3.4.2",
     "typescript": "^5.7.2",
     "vitest": "^2.1.8"
   }

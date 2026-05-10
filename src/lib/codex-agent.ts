@@ -12,17 +12,32 @@ const execFileAsync = promisify(execFile);
 async function tryCodex(prompt: string) {
   if (process.env.CODEX_DISABLED === "true") return null;
 
+  const outputPath = join(tmpdir(), `stockwatch-codex-${randomUUID()}.txt`);
+
   try {
-    const outputPath = join(tmpdir(), `stockwatch-codex-${randomUUID()}.txt`);
-    const { stdout } = await execFileAsync("codex", ["exec", "--sandbox", "read-only", "--output-last-message", outputPath, prompt], {
-      timeout: 45000,
-      maxBuffer: 1024 * 1024
-    });
+    await execFileAsync(
+      "codex",
+      [
+        "exec",
+        "--sandbox",
+        "read-only",
+        "-m",
+        process.env.CODEX_MODEL || "gpt-5.2",
+        "--output-last-message",
+        outputPath,
+        prompt
+      ],
+      {
+        timeout: 45000,
+        maxBuffer: 1024 * 1024
+      }
+    );
     const cleanAnswer = await readFile(outputPath, "utf8").catch(() => "");
-    await unlink(outputPath).catch(() => undefined);
-    return cleanAnswer.trim() || stdout.trim() || null;
+    return cleanAnswer.trim() || null;
   } catch {
     return null;
+  } finally {
+    await unlink(outputPath).catch(() => undefined);
   }
 }
 
@@ -30,7 +45,17 @@ export async function codexDraftOrders(products: ProductIntelligence[]) {
   const prompt = [
     "You are Codex embedded in Stockwatch, an eCommerce inventory ops workflow.",
     "Return three terse restock recommendations with reasoning from this JSON:",
-    JSON.stringify(products.map(({ sku, name, stock, threshold, salesVelocityPerHour, hoursUntilZero, urgency }) => ({ sku, name, stock, threshold, salesVelocityPerHour, hoursUntilZero, urgency })))
+    JSON.stringify(
+      products.map(({ sku, name, stock, threshold, salesVelocityPerHour, hoursUntilZero, urgency }) => ({
+        sku,
+        name,
+        stock,
+        threshold,
+        salesVelocityPerHour,
+        hoursUntilZero,
+        urgency
+      }))
+    )
   ].join("\n");
 
   const codexText = await tryCodex(prompt);

@@ -15,7 +15,11 @@ describe("inventory forecasting", () => {
 
   it("answers before-Friday questions from enriched product data", () => {
     const products = seedProducts.map(enrichProduct);
-    const answer = answerInventoryQuestion("which products will stock out before Friday?", products, new Date("2026-05-11T10:00:00Z"));
+    const answer = answerInventoryQuestion(
+      "which products will stock out before Friday?",
+      products,
+      new Date("2026-05-11T10:00:00Z")
+    );
     expect(answer).toContain("before Friday");
     expect(answer).toContain("ATTA-10K");
   });

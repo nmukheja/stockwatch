@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, BellRing, Bot, Clock3, Database, RefreshCw, Send, Sparkles, Zap } from "lucide-react";
 import type { DashboardPayload, ProductIntelligence } from "@/types/inventory";
 
@@ -30,8 +30,9 @@ export default function Dashboard({ initialData, userName }: Props) {
   const [question, setQuestion] = useState("which products will stock out before Friday?");
   const [answer, setAnswer] = useState("");
   const [answerSource, setAnswerSource] = useState<"codex" | "fallback" | "">("");
+  const [queryError, setQueryError] = useState("");
+  const [isAsking, setIsAsking] = useState(false);
   const [rewriting, setRewriting] = useState(false);
-  const [pending, startTransition] = useTransition();
 
   const critical = useMemo(() => data.products.filter((product) => product.status !== "healthy").slice(0, 3), [data]);
   const atRiskRevenue = data.products
@@ -47,6 +48,7 @@ export default function Dashboard({ initialData, userName }: Props) {
     const response = await fetch("/api/inventory/seed", { method: "POST" });
     setAnswer("");
     setAnswerSource("");
+    setQueryError("");
     setRewriting(false);
     setData(await response.json());
   }
@@ -60,16 +62,28 @@ export default function Dashboard({ initialData, userName }: Props) {
 
   async function askCodex(event: React.FormEvent) {
     event.preventDefault();
-    startTransition(async () => {
+    setIsAsking(true);
+    setQueryError("");
+    setAnswer("");
+    setAnswerSource("");
+
+    try {
       const response = await fetch("/api/inventory/query", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question })
       });
       const payload = await response.json();
+      if (!response.ok) {
+        throw new Error(payload.error || "Codex query failed.");
+      }
       setAnswer(payload.answer);
       setAnswerSource(payload.source);
-    });
+    } catch (error) {
+      setQueryError(error instanceof Error ? error.message : "Codex query failed.");
+    } finally {
+      setIsAsking(false);
+    }
   }
 
   async function logout() {
@@ -96,8 +110,12 @@ export default function Dashboard({ initialData, userName }: Props) {
           <button className="ghost-btn" onClick={refresh} title="Refresh inventory">
             <RefreshCw size={16} />
           </button>
-          <button className="ghost-btn" onClick={seed}>Reset demo</button>
-          <button className="ghost-btn" onClick={logout}>Sign out</button>
+          <button className="ghost-btn" onClick={seed}>
+            Reset demo
+          </button>
+          <button className="ghost-btn" onClick={logout}>
+            Sign out
+          </button>
           <button className="danger-btn" onClick={shock}>
             <Zap size={16} /> Trigger demand spike
           </button>
@@ -114,7 +132,9 @@ export default function Dashboard({ initialData, userName }: Props) {
             <span>
               <Bot size={18} /> Codex risk score
             </span>
-            <strong className={data.products[0]?.urgency > 75 ? "urgent" : "warning"}>{data.products[0]?.urgency || 0}</strong>
+            <strong className={data.products[0]?.urgency > 75 ? "urgent" : "warning"}>
+              {data.products[0]?.urgency || 0}
+            </strong>
           </div>
           <div className="hero-stat">
             <span>
@@ -165,7 +185,9 @@ export default function Dashboard({ initialData, userName }: Props) {
               <div className="sku-row" key={product.sku}>
                 <div className="sku-name">
                   <strong>{product.name}</strong>
-                  <span>{product.category} · {product.sku}</span>
+                  <span>
+                    {product.category} · {product.sku}
+                  </span>
                 </div>
                 <div>
                   <div className="metric-label">On hand</div>
@@ -177,7 +199,12 @@ export default function Dashboard({ initialData, userName }: Props) {
                     <div
                       style={{
                         width: `${Math.min(100, (product.stock / Math.max(product.threshold, 1)) * 100)}%`,
-                        background: product.status === "critical" ? "var(--red)" : product.status === "watch" ? "var(--amber)" : "var(--mint)"
+                        background:
+                          product.status === "critical"
+                            ? "var(--red)"
+                            : product.status === "watch"
+                              ? "var(--amber)"
+                              : "var(--mint)"
                       }}
                     />
                   </div>
@@ -197,7 +224,9 @@ export default function Dashboard({ initialData, userName }: Props) {
             <Sparkles size={18} className="good" />
           </div>
           {data.products.slice(0, 5).map((product) => (
-            <p className="reasoning" key={product.sku}>{product.reasoning}</p>
+            <p className="reasoning" key={product.sku}>
+              {product.reasoning}
+            </p>
           ))}
         </div>
       </section>
@@ -206,13 +235,16 @@ export default function Dashboard({ initialData, userName }: Props) {
         <h2>Ask inventory in plain English</h2>
         <form onSubmit={askCodex}>
           <input value={question} onChange={(event) => setQuestion(event.target.value)} />
-          <button className="primary-btn" type="submit" disabled={pending}>
-            <Send size={16} /> {pending ? "Asking" : "Ask Codex"}
+          <button className="primary-btn" type="submit" disabled={isAsking}>
+            <Send size={16} /> {isAsking ? "Asking Codex" : "Ask Codex"}
           </button>
         </form>
+        {queryError ? <div className="answer error-answer">{queryError}</div> : null}
         {answer ? (
           <div className="answer">
-            <span className="status-pill">{answerSource === "codex" ? "Live Codex exec" : "Forecast engine fallback"}</span>
+            <span className="status-pill">
+              {answerSource === "codex" ? "Live Codex exec" : "Forecast engine fallback"}
+            </span>
             <p>{answer}</p>
           </div>
         ) : null}
@@ -221,17 +253,21 @@ export default function Dashboard({ initialData, userName }: Props) {
       <section className="drafts">
         <h2>Auto-drafted supplier actions</h2>
         <div className="draft-list">
-          {data.drafts.length ? data.drafts.map((draft) => (
-            <article className="draft-card" key={draft.id}>
-              <span className="status-pill">Urgency {draft.urgency}</span>
-              <strong>{draft.productName}</strong>
-              <div>{draft.message}</div>
-              <p className="reasoning">{draft.reasoning}</p>
-            </article>
-          )) : (
+          {data.drafts.length ? (
+            data.drafts.map((draft) => (
+              <article className="draft-card" key={draft.id}>
+                <span className="status-pill">Urgency {draft.urgency}</span>
+                <strong>{draft.productName}</strong>
+                <div>{draft.message}</div>
+                <p className="reasoning">{draft.reasoning}</p>
+              </article>
+            ))
+          ) : (
             <article className="draft-card">
               <strong>No drafts yet</strong>
-              <p className="reasoning">Trigger a demand spike to make Codex draft restock orders and Slack-style alert text.</p>
+              <p className="reasoning">
+                Trigger a demand spike to make Codex draft restock orders and Slack-style alert text.
+              </p>
             </article>
           )}
         </div>

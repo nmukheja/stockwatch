@@ -31,7 +31,7 @@ Open http://localhost:3000.
 
 ## Codex integration
 
-`src/lib/codex-agent.ts` is the programmatic Codex boundary. By default the app calls `codex exec` for natural-language inventory answers, so the demo exercises Codex inside the workflow. Set `CODEX_DISABLED=true` only when running in an environment without the Codex CLI; the UI labels fallback answers clearly.
+`src/lib/codex-agent.ts` is the programmatic Codex boundary. By default the app calls `codex exec` for natural-language inventory answers, so the demo exercises Codex inside the workflow. It defaults to `CODEX_MODEL=gpt-5.2` for compatibility with the current Codex CLI; set a different model in `.env.local` after upgrading the CLI. Set `CODEX_DISABLED=true` only when running in an environment without Codex; the UI labels fallback answers clearly.
 
 ## Tests
 

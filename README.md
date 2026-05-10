@@ -4,7 +4,7 @@ Smart inventory alerting for eCommerce ops teams. Stockwatch gives a live dashbo
 
 ## Demo flow
 
-1. Sign in with `ops@stockwatch.local` / `codex-demo`.
+1. Register an ops account or sign in with an existing account.
 2. Review the live SKU monitor and countdown clocks.
 3. Click **Trigger demand spike** to simulate a fast checkout surge.
 4. Watch the dashboard highlight critical countdowns and generate draft supplier actions.
@@ -13,14 +13,14 @@ Smart inventory alerting for eCommerce ops teams. Stockwatch gives a live dashbo
 ## Stack
 
 - Next.js App Router and React
-- NextAuth credentials login
+- Register/sign-in auth with MongoDB user persistence, password hashing, and signed JWT session cookies
 - MongoDB Atlas persistence through Mongoose
 - Programmatic `codex exec` bridge with deterministic local fallback
 - Vitest unit tests for stockout forecasting and natural-language query behavior
 
 ## Environment
 
-Copy `.env.example` to `.env.local` and set `MONGODB_URI` for Atlas persistence. If no URI is present, the app runs in local memory mode so the hackathon demo still works.
+Copy `.env.example` to `.env.local` and set `MONGODB_URI` plus `AUTH_SECRET`. User registration and login require MongoDB because user accounts are persisted in Atlas. Inventory data still falls back to local memory if no URI is present, which is useful while developing non-auth flows.
 
 ```bash
 npm install

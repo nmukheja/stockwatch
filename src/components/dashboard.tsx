@@ -69,6 +69,11 @@ export default function Dashboard({ initialData, userName }: Props) {
     });
   }
 
+  async function logout() {
+    await fetch("/api/logout", { method: "POST" });
+    window.location.href = "/login";
+  }
+
   useEffect(() => {
     const interval = window.setInterval(() => setTick((value) => value + 1), 1000);
     return () => window.clearInterval(interval);
@@ -89,6 +94,7 @@ export default function Dashboard({ initialData, userName }: Props) {
             <RefreshCw size={16} />
           </button>
           <button className="ghost-btn" onClick={seed}>Reset demo</button>
+          <button className="ghost-btn" onClick={logout}>Sign out</button>
           <button className="danger-btn" onClick={shock}>
             <Zap size={16} /> Trigger demand spike
           </button>

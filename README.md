@@ -52,9 +52,10 @@ CODEX_DISABLED=false
 npm test
 ```
 
-## Video outline
+## Live demo
 
-1. Demo the app: register, run a demand scenario, show stockout countdowns, restock drafts, and ask which products will stock out before Friday.
-2. Show the `Codex live` badge after the natural-language answer to prove the app used the live Codex CLI path.
-3. Explain the build: MongoDB user/inventory persistence, JWT auth, forecast tests, and the `src/lib/codex-agent.ts` bridge.
-4. Open `tryCodex` and show how `CODEX_SDK_ENABLED=true` makes the app call `codex exec` programmatically.
+[Add Vercel URL after deployment]
+
+## Loom walkthrough
+
+[Add Loom link after recording]

@@ -54,7 +54,9 @@ npm test
 
 ## Live demo
 
-[Add Vercel URL after deployment]
+https://stockwatch-jqqa82dz2-nitinlabs.vercel.app/
+
+> **Note:** The live deployment runs the deterministic local engine for Codex-powered features — Vercel's serverless runtime does not support binary execution so the `codex exec` subprocess is disabled. The `Codex live` path runs on localhost where the CLI is authenticated. In production this would be replaced with a direct call to the OpenAI Responses API — same model, HTTP call instead of subprocess.
 
 ## Loom walkthrough
 

@@ -21,8 +21,9 @@ body {
   min-height: 100%;
   margin: 0;
   background:
-    radial-gradient(circle at 20% 0%, rgba(79, 243, 165, 0.12), transparent 32rem),
-    linear-gradient(135deg, #07110e 0%, #0c1715 46%, #121413 100%);
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(79, 243, 165, 0.18) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 30% at 85% 80%, rgba(104, 168, 255, 0.08) 0%, transparent 50%),
+    linear-gradient(160deg, #060e0b 0%, #0a1410 40%, #0d1612 100%);
   color: var(--text);
   font-family:
     Inter,
@@ -173,6 +174,8 @@ a {
   justify-content: space-between;
   gap: 16px;
   padding: 8px 0 24px;
+  border-bottom: 1px solid rgba(199, 255, 227, 0.08);
+  margin-bottom: 8px;
 }
 
 .brand {
@@ -215,6 +218,9 @@ a {
   border-radius: 8px;
   background: var(--panel);
   backdrop-filter: blur(18px);
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.4),
+    0 1px 0 rgba(79, 243, 165, 0.06) inset;
 }
 
 .hero-panel {
@@ -396,6 +402,19 @@ a {
   font-weight: 900;
 }
 
+.clock.urgent {
+  text-shadow:
+    0 0 20px rgba(255, 107, 107, 0.7),
+    0 0 40px rgba(255, 107, 107, 0.35),
+    0 0 80px rgba(255, 107, 107, 0.15);
+}
+
+.clock.warning {
+  text-shadow:
+    0 0 20px rgba(255, 202, 99, 0.6),
+    0 0 40px rgba(255, 202, 99, 0.25);
+}
+
 .urgent {
   color: var(--red);
 }
@@ -463,9 +482,10 @@ a {
 .slack-bubble {
   display: grid;
   gap: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(74, 21, 75, 0.6);
   border-radius: 8px;
-  background: #1d1c1d;
+  background: linear-gradient(135deg, #1a0e1c 0%, #1d1c1d 100%);
+  box-shadow: 0 0 0 1px rgba(74, 21, 75, 0.3) inset;
   color: #f8f8f8;
   padding: 12px;
 }
@@ -478,6 +498,7 @@ a {
 }
 
 .slack-app {
+  color: #e8a0e8;
   font-weight: 850;
 }
 

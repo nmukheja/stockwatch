@@ -60,4 +60,4 @@ https://stockwatch-jqqa82dz2-nitinlabs.vercel.app/
 
 ## Loom walkthrough
 
-[Add Loom link after recording]
+https://www.loom.com/share/9b49a2e1501f4c72b8873193c32a2c26
